@@ -19,4 +19,4 @@ def orchestrate_query(query: str):
     
     return context
 
-print(orchestrate_query("I wanna know about the weather of Lahore?"))
+print(orchestrate_query("I wanna know about NLP and its domain?"))

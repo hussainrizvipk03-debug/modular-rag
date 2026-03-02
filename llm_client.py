@@ -15,5 +15,7 @@ def call_groq(query, system_prompt):
     )
     return response.choices[0].message.content
 
+# print(call_groq("What is the weather for lahore","You are an helpful agent"))
+
 
     

@@ -12,3 +12,5 @@ def router(query):
     """
 
     return call_groq(query, system_prompt)
+
+# print(router("what is the search regarding weather of lahore?"))
