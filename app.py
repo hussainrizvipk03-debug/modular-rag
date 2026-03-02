@@ -1,7 +1,7 @@
 import streamlit as st, chromadb, os
 from groq import Groq
 from dotenv import load_dotenv
-from vectordb.generation import generate_rag_response
+from tools import generate_rag_response
 
 load_dotenv()
 st.set_page_config(page_title="PDF AI", page_icon="📄")
@@ -10,7 +10,7 @@ st.title(" NLP Chat Assistant")
 @st.cache_resource
 def init():
     client = chromadb.PersistentClient(path="vectordb/chroma_db")
-    return client.get_or_create_collection("NLP_RAG"), Groq(api_key=os.getenv("GROQ_API_KEY"))
+    return client.get_or_create_collection("NLP_Book"), Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 col, groq = init()
 
@@ -30,7 +30,7 @@ if prompt := st.chat_input("Ask about your PDF"):
         if prompt in past_queries:
             response = "That question was already answered! Please check the history above."
         else:
-            response = generate_rag_reponse(prompt,col,groq)
+            response = generate_rag_response(prompt,col,groq)
         
         st.write(response)
         st.session_state.msgs.append({"role": "assistant", "content": response})
