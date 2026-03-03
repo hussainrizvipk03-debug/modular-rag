@@ -95,7 +95,7 @@ def init():
     try:
         chroma_client = chromadb.PersistentClient(path="vectordb/chroma_db")
         collection = chroma_client.get_or_create_collection("NLP_Book")
-        groq_client = Groq(api_key=GROQ_API_KEY)
+        groq_client = Groq(api_key=grok_api_key)
         return collection, groq_client
     except Exception as e:
         raise RuntimeError(f"Initialization failed: {e}")
