@@ -37,8 +37,10 @@ def vector_db(query,top_k=3):
 
     You are an NLP Assistant . 
     You have been provided with the CONTEXT and the QUERY . 
-    You have to reply accordingly with the CONTEXT and the QUERY
+    You have to reply accordingly with the CONTEXT and the QUERY .
     """
+
+    return context
 
 def generate_rag_response(user_query, col, client):
     # Directly query the VectorDB for context
