@@ -57,11 +57,11 @@ st.markdown("""
 
 
 # 🔐 Secure API Key Handling for Streamlit Cloud
-if "GROQ_API_KEY" not in st.secrets:
-    st.error("Missing GROQ_API_KEY in Streamlit secrets.")
+if "grok_api_key" not in st.secrets:
+    st.error("Missing grok_api_key in Streamlit secrets.")
     st.stop()
 
-GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+grok_api_key = st.secrets["grok_api_key"]
 
 
 # 3. Sidebar for Info/Settings
