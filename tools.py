@@ -35,9 +35,18 @@ def vector_db(query,top_k=3):
     QUERY:
     {query}
 
-    You are an NLP Assistant . 
-    You have been provided with the CONTEXT and the QUERY . 
-    You have to reply accordingly with the CONTEXT and the QUERY .
+   INSTRUCTIONS:
+You are an NLP Assistant. Your goal is to synthesize and extract from the provided CONTEXT to answer the QUERY with both academic rigor and conceptual clarity.
+
+Research Phase: Scrutinize the context for technical specifics, including mathematical formulas (in LaTeX), algorithm steps, time complexity, and specific citations mentioned by Eisenstein.
+
+Explainer Phase: Translate those technicalities into a clear, structured explanation. Define all specialized terminology used in your answer.
+
+Comprehensive Synthesis: Do not ignore any part of the query. If the query asks for "differences," "operations," or "comparisons," ensure you provide a structured list or a contrasted analysis.
+
+Identity Awareness: Treat the author (Eienstein) as the primary source. If a concept is described as a "standard approach" or "proposed solution" in the text, attribute it to the textbook's framework.
+
+Quality Control: If the specific answer (like a list of operations) is missing from the context, state exactly what is missing but explain the closest related concept found.
     """
 
     return context
@@ -56,7 +65,7 @@ def generate_rag_response(user_query, col, client):
     # Directly retrieve output info using Groq model
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
-        max_tokens=300,
+        max_tokens=500,
         messages=[
             {"role": "system", "content": "You are a helpful AI assistant. Answer the user's question concisely using ONLY the provided context."},
             {"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{user_query}"}
