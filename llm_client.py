@@ -1,9 +1,24 @@
 from groq import Groq
 from dotenv import load_dotenv
 import os
-load_dotenv()
+
+def get_api_key():
+    load_dotenv()
+    api_key = os.environ.get("GROK_API_KEY")
+    if not api_key:
+        try:
+            import streamlit as st
+            api_key = st.secrets.get("GROK_API_KEY")
+        except Exception:
+            pass
+    return api_key
+
 def call_groq(query, system_prompt):
-    client = Groq(api_key=os.getenv("groq_api_key"))
+    api_key = get_api_key()
+    if not api_key:
+        raise ValueError("API Key not found!")
+        
+    client = Groq(api_key=api_key)
     
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -14,8 +29,3 @@ def call_groq(query, system_prompt):
         ]
     )
     return response.choices[0].message.content
-
-# print(call_groq("What is the weather for lahore","You are an helpful agent"))
-
-
-    

@@ -60,19 +60,13 @@ st.markdown("""
 
 
 # 🔐 Secure API Key Handling for Streamlit Cloud & Local
-# 1. Try fetching from environment variables (.env)
-groq_api_key = os.getenv("GROQ_API_KEY") or os.getenv("groq_api_key")
+GROK_API_KEY = os.getenv("GROK_API_KEY")
 
-# 2. If not found locally, try fetching from Streamlit secrets
-if not groq_api_key:
-    if "GROQ_API_KEY" in st.secrets:
-        groq_api_key = st.secrets["GROQ_API_KEY"]
-    elif "groq_api_key" in st.secrets:
-        groq_api_key = st.secrets["groq_api_key"]
+if not GROK_API_KEY and "GROK_API_KEY" in st.secrets:
+    GROK_API_KEY = st.secrets["GROK_API_KEY"]
 
-# 3. Halt if no key is found at all
-if not groq_api_key:
-    st.error("Missing API key! Please set GROQ_API_KEY in Streamlit secrets or your local .env file.")
+if not GROK_API_KEY:
+    st.error("Missing API key! Please set GROK_API_KEY in Streamlit secrets or your local .env file.")
     st.stop()
 
 
@@ -107,7 +101,7 @@ def init():
     try:
         chroma_client = chromadb.PersistentClient(path="vectordb/chroma_db")
         collection = chroma_client.get_or_create_collection("NLP_Book")
-        groq_client = Groq(api_key=groq_api_key)
+        groq_client = Groq(api_key=GROK_API_KEY)
         return collection, groq_client
     except Exception as e:
         raise RuntimeError(f"Initialization failed: {e}")
