@@ -2,8 +2,11 @@ import streamlit as st
 import chromadb
 import os
 import time
+from dotenv import load_dotenv
 from groq import Groq
 from tools import generate_rag_response
+
+load_dotenv()
 
 # 1. Page Configuration
 st.set_page_config(
@@ -56,12 +59,21 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# 🔐 Secure API Key Handling for Streamlit Cloud
-if "grok_api_key" not in st.secrets:
-    st.error("Missing grok_api_key in Streamlit secrets.")
-    st.stop()
+# 🔐 Secure API Key Handling for Streamlit Cloud & Local
+# 1. Try fetching from environment variables (.env)
+groq_api_key = os.getenv("GROQ_API_KEY") or os.getenv("groq_api_key")
 
-grok_api_key = st.secrets["grok_api_key"]
+# 2. If not found locally, try fetching from Streamlit secrets
+if not groq_api_key:
+    if "GROQ_API_KEY" in st.secrets:
+        groq_api_key = st.secrets["GROQ_API_KEY"]
+    elif "groq_api_key" in st.secrets:
+        groq_api_key = st.secrets["groq_api_key"]
+
+# 3. Halt if no key is found at all
+if not groq_api_key:
+    st.error("Missing API key! Please set GROQ_API_KEY in Streamlit secrets or your local .env file.")
+    st.stop()
 
 
 # 3. Sidebar for Info/Settings
@@ -95,7 +107,7 @@ def init():
     try:
         chroma_client = chromadb.PersistentClient(path="vectordb/chroma_db")
         collection = chroma_client.get_or_create_collection("NLP_Book")
-        groq_client = Groq(api_key=grok_api_key)
+        groq_client = Groq(api_key=groq_api_key)
         return collection, groq_client
     except Exception as e:
         raise RuntimeError(f"Initialization failed: {e}")
