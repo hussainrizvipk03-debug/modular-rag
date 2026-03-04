@@ -18,35 +18,39 @@ def vector_db(query, top_k=10):
     return "\n\n".join(retrieved_docs)
 
 def generate_rag_response(user_query, col, client, chat_history=None):
-    # 1. Retrieve Context with higher top_k for better synthesis
+    # 1. Retrieve Context with similarity threshold
     results = col.query(query_texts=[user_query], n_results=10)
+    
+    # Check similarity distance (ChromaDB default is L2; lower is better)
+    # If the closest match is too far (e.g., > 1.6), it's likely irrelevant
+    distances = results.get("distances", [[]])[0]
+    if not distances or distances[0] > 1.6:
+        return "this is not in the provided context."
+
     retrieved_docs = results["documents"][0] if results["documents"] else []
     context = "\n\n".join(retrieved_docs)
     
     if not context.strip():
-        return "I'm sorry, I couldn't find relevant information in the document to answer that."
+        return "this is not in the provided context."
 
     # 2. Build Conversational Prompt with Extreme Grounding
     strict_system_prompt = (
         "You are a strict and factual NLP Expert Assistant. Your ONLY source of truth is the provided Context.\n"
         "CRITICAL RULES:\n"
-        "1. Answer ONLY from the Context. If the answer is not explicitly there, say: 'this is not in the provided context.'\n"
-        "2. Do NOT use outside knowledge, even for definitions or common facts not listed in the context.\n"
-        "3. Do NOT provide 'related info' or guess. If only 50% of the answer is in the context, only provide that 50%.\n"
-        "4. Use the Chat History solely to understand what 'it', 'they', or 'that' refers to in follow-up questions."
+        "1. If the exact answer is NOT contained in the provided Context, you MUST respond with EXACTLY the following phrase and NOTHING ELSE: 'this is not in the provided context.'\n"
+        "2. Do NOT provide apologies, partial answers, or outside knowledge.\n"
+        "3. Do NOT guess. If the context is even slightly insufficient, use the 'not in context' phrase.\n"
+        "4. Use the Chat History ONLY to resolve pronouns (it, they) to ensure you are looking for the right thing in the Context."
     )
 
     # Prepare messages including history
     messages = [{"role": "system", "content": strict_system_prompt}]
     
     if chat_history:
-        # Filter history to only include standard user/assistant messages
-        # (Exclude system notes or duplicate warnings to keep context clean)
         for msg in chat_history[-4:]:
             if "Already asked" not in msg["content"] and "already asked" not in msg["content"]:
                 messages.append({"role": msg["role"], "content": msg["content"]})
     
-    # Add context to the current query
     messages.append({
         "role": "user", 
         "content": f"REFER TO THIS CONTEXT FOR YOUR RESPONSE:\n{context}\n\nQUESTION:\n{user_query}"
@@ -54,7 +58,7 @@ def generate_rag_response(user_query, col, client, chat_history=None):
 
     # 3. Generate Response
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="llama-3.1-8b-instant",
         max_tokens=900,
         temperature=0, 
         messages=messages

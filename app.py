@@ -89,7 +89,7 @@ with st.sidebar:
         "It uses a local vector database to retrieve precise context from your textbook."
     )
     st.divider()
-    st.markdown("**Model:** `llama-3.3-70b-versatile`")
+    st.markdown("**Model:** `llama-3.1-8b-instant`")
     st.markdown("**Engine:** ChromaDB + Groq")
     
     st.divider()
@@ -106,18 +106,18 @@ st.markdown("Ask complex conceptual questions, ask for mathematical formulas, or
 
 
 @st.cache_resource(show_spinner="Initializing Database and LLM...")
-def init():
+def init(api_key):
     try:
         chroma_client = chromadb.PersistentClient(path="vectordb/chroma_db")
         collection = chroma_client.get_or_create_collection("NLP_Book")
-        groq_client = Groq(api_key=GROK_API_KEY)
+        groq_client = Groq(api_key=api_key)
         return collection, groq_client
     except Exception as e:
         raise RuntimeError(f"Initialization failed: {e}")
 
 
 try:
-    col, groq = init()
+    col, groq = init(GROK_API_KEY)
 except Exception as e:
     st.error(f"Error initializing services: {e}")
     st.stop()
