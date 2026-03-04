@@ -65,7 +65,7 @@ def generate_rag_response(user_query, col, client):
     # Directly retrieve output info using Groq model
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
-        max_tokens=500,
+        max_tokens=900,
         messages=[
             {"role": "system", "content": "You are a helpful AI assistant. Answer the user's question concisely using ONLY the provided context."},
             {"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{user_query}"}
