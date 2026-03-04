@@ -1,7 +1,16 @@
 import streamlit as st
-import chromadb
+import sys
 import os
 import time
+
+# 🛠️ Deployment Patch: Ensure SQLite compatibility on Streamlit Cloud
+try:
+    __import__('pysqlite3')
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    pass
+
+import chromadb
 from dotenv import load_dotenv
 from groq import Groq
 from tools import generate_rag_response
@@ -81,7 +90,7 @@ with st.sidebar:
     )
     st.divider()
     st.markdown("**Model:** `llama-3.3-70b-versatile`")
-    st.markdown("**Search:** Vector + Context Synthesis")
+    st.markdown("**Engine:** ChromaDB + Groq")
     
     st.divider()
     if st.button("🗑️ Clear Conversation", use_container_width=True):
@@ -129,8 +138,9 @@ for msg in st.session_state.msgs:
 
 
 # 6. User Input and Response Generation
-if prompt := st.chat_input("E.g., What is the difference between Generative and Discriminative models?"):
+if prompt := st.chat_input():
     
+    # Store history BEFORE appending current prompt to check for duplicates
     past_queries = [m["content"] for m in st.session_state.msgs if m["role"] == "user"]
     
     st.session_state.msgs.append({"role": "user", "content": prompt})
@@ -141,15 +151,31 @@ if prompt := st.chat_input("E.g., What is the difference between Generative and 
     with st.chat_message("assistant", avatar="🤖"):
         
         if prompt in past_queries:
-            st.info("That question was already answered! Please check the history above.")
-            response = "That question was already answered! Please check the history above."
+            # Find the previous assistant response to this prompt
+            previous_answer = ""
+            for i in range(len(st.session_state.msgs) - 2, -1, -1):
+                if st.session_state.msgs[i]["role"] == "user" and st.session_state.msgs[i]["content"] == prompt:
+                    if i + 1 < len(st.session_state.msgs) and st.session_state.msgs[i+1]["role"] == "assistant":
+                        previous_answer = st.session_state.msgs[i+1]["content"]
+                        break
+            
+            not_found_msg = "I cannot answer this based on the provided context."
+            if not_found_msg in previous_answer:
+                response = f"**Note:** Already asked. {not_found_msg}"
+                st.error(response)
+            else:
+                # Show the question and the previous "detail" (the answer)
+                response = f"**Already Asked:** {prompt}\n\n**Answer:**\n{previous_answer}"
+                st.warning(response)
+                
             st.session_state.msgs.append({"role": "assistant", "content": response})
         
         else:
             with st.spinner("Searching the text and synthesizing the answer..."):
                 start_time = time.time()
                 try:
-                    response = generate_rag_response(prompt, col, groq)
+                    # Pass the message history for conversational context
+                    response = generate_rag_response(prompt, col, groq, st.session_state.msgs)
                     generation_time = time.time() - start_time
                     
                     st.markdown(response)
@@ -158,6 +184,6 @@ if prompt := st.chat_input("E.g., What is the difference between Generative and 
                     st.session_state.msgs.append({"role": "assistant", "content": response})
                 
                 except Exception as e:
-                    response = f"An error occurred while generating the response: {e}"
-                    st.error(response)
-                    st.session_state.msgs.append({"role": "assistant", "content": response})
+                    error_msg = f"An error occurred: {e}"
+                    st.error(error_msg)
+                    st.session_state.msgs.append({"role": "assistant", "content": error_msg})
