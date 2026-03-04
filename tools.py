@@ -30,7 +30,7 @@ def generate_rag_response(user_query, col, client, chat_history=None):
     strict_system_prompt = (
         "You are a strict and factual NLP Expert Assistant. Your ONLY source of truth is the provided Context.\n"
         "CRITICAL RULES:\n"
-        "1. Answer ONLY from the Context. If the answer is not explicitly there, say: 'I cannot answer this based on the provided context.'\n"
+        "1. Answer ONLY from the Context. If the answer is not explicitly there, say: 'this is not in the provided context.'\n"
         "2. Do NOT use outside knowledge, even for definitions or common facts not listed in the context.\n"
         "3. Do NOT provide 'related info' or guess. If only 50% of the answer is in the context, only provide that 50%.\n"
         "4. Use the Chat History solely to understand what 'it', 'they', or 'that' refers to in follow-up questions."

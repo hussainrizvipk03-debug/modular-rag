@@ -159,9 +159,9 @@ if prompt := st.chat_input():
                         previous_answer = st.session_state.msgs[i+1]["content"]
                         break
             
-            not_found_msg = "I cannot answer this based on the provided context."
-            if not_found_msg in previous_answer:
-                response = f"**Note:** Already asked. {not_found_msg}"
+            not_found_msg = "this is not in the provided context."
+            if not_found_msg in previous_answer.lower():
+                response = not_found_msg
                 st.error(response)
             else:
                 # Show the question and the previous "detail" (the answer)
